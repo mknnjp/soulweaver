@@ -1,4 +1,4 @@
-use crate::graph::CommitNode;
+use crate::graph::{CommitNode, GitRef};
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum ConnectionState {
@@ -19,6 +19,7 @@ pub struct AppState {
     pub repo_path_input: String,
     pub connection: ConnectionState,
     pub commits: Vec<CommitNode>,
+    pub refs: Vec<GitRef>,
     pub scroll_offset: iced::widget::scrollable::RelativeOffset,
     pub zoom: f32,
     pub pan_x: f32,

@@ -1,5 +1,5 @@
-use crate::git::parse_git_log;
-use crate::graph::CommitNode;
+use crate::git::{parse_git_log, parse_git_refs};
+use crate::graph::{CommitNode, GitRef};
 use anyhow::{Context, Result};
 use russh::client::{self, Handler};
 use russh::ChannelMsg;
@@ -11,7 +11,7 @@ pub async fn fetch_git_graph(
     user: &str,
     key_path: &str,
     repo_path: &str,
-) -> Result<Vec<CommitNode>> {
+) -> Result<(Vec<CommitNode>, Vec<GitRef>)> {
     let addr = if port.is_empty() {
         host.to_string()
     } else {
@@ -87,7 +87,34 @@ pub async fn fetch_git_graph(
     }
 
     let commits = parse_git_log(&raw_output)?;
-    Ok(commits)
+
+    // Retrieve references
+    let mut channel = session.channel_open_session().await?;
+    let ref_cmd = format!(
+        "git -C {} for-each-ref --format='%(refname)%x00%(objectname)%x00%(refname:short)'",
+        repo_path
+    );
+    channel.exec(true, ref_cmd.as_str()).await?;
+
+    let mut ref_output = Vec::new();
+    while let Some(msg) = channel.wait().await {
+        match msg {
+            ChannelMsg::Data { data } => {
+                ref_output.extend_from_slice(&data);
+            }
+            ChannelMsg::ExitStatus { exit_status } => {
+                if exit_status != 0 {
+                    anyhow::bail!("git for-each-ref exited with code {}", exit_status);
+                }
+                break;
+            }
+            ChannelMsg::Eof => break,
+            _ => {}
+        }
+    }
+
+    let refs = parse_git_refs(&ref_output)?;
+    Ok((commits, refs))
 }
 
 struct ClientHandler;

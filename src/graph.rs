@@ -1,5 +1,21 @@
 use std::collections::HashMap;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum RefType {
+    #[default]
+    Branch,
+    Tag,
+    Other,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct GitRef {
+    pub name: String,
+    pub ref_type: RefType,
+    pub short_name: String,
+    pub target: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct CommitNode {
     pub hash: String,
