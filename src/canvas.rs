@@ -1,5 +1,5 @@
-use crate::graph::CommitNode;
-use iced::widget::canvas::{Frame, Geometry, Path, Program, Stroke};
+use crate::graph::{CommitNode, GitRef, RefType};
+use iced::widget::canvas::{Frame, Geometry, Path, Program, Stroke, Text};
 use iced::mouse::Cursor;
 use iced::{Color, Point, Rectangle, Theme};
 use iced::Renderer;
@@ -7,11 +7,12 @@ use std::collections::HashMap;
 
 pub struct GitGraphCanvas {
     commits: Vec<CommitNode>,
+    refs: Vec<GitRef>,
     index_map: HashMap<String, usize>,
 }
 
 impl GitGraphCanvas {
-    pub fn new(commits: &[CommitNode]) -> Self {
+    pub fn new(commits: &[CommitNode], refs: &[GitRef]) -> Self {
         let index_map: HashMap<String, usize> = commits
             .iter()
             .enumerate()
@@ -20,6 +21,7 @@ impl GitGraphCanvas {
 
         Self {
             commits: commits.to_vec(),
+            refs: refs.to_vec(),
             index_map,
         }
     }
@@ -38,6 +40,14 @@ impl Program<crate::message::Message> for GitGraphCanvas {
     ) -> Vec<Geometry> {
         let size = bounds.size();
         let mut frame = Frame::new(renderer, size);
+
+        let mut refs_by_commit: HashMap<String, Vec<GitRef>> = HashMap::new();
+        for r in &self.refs {
+            refs_by_commit
+                .entry(r.target.clone())
+                .or_default()
+                .push(r.clone());
+        }
 
         let node_radius = 5.0;
         let line_width = 2.0;
@@ -109,6 +119,45 @@ impl Program<crate::message::Message> for GitGraphCanvas {
                     ..Stroke::default()
                 },
             );
+
+            // Draw branch/tag labels to the right of the node.
+            if let Some(commit_refs) = refs_by_commit.get(&commit.hash) {
+                let mut x = point.x + radius + 8.0;
+                for r in commit_refs {
+                    let (fill_color, text_color) = match r.ref_type {
+                        RefType::Branch => (
+                            Color::from_rgb(0.2, 0.45, 0.85),
+                            Color::WHITE,
+                        ),
+                        RefType::Tag => (
+                            Color::from_rgb(0.85, 0.55, 0.15),
+                            Color::WHITE,
+                        ),
+                        RefType::Other => (Color::from_rgb(0.5, 0.5, 0.5), Color::WHITE),
+                    };
+
+                    let label = r.short_name.clone();
+                    let width = (label.len() as f32) * 7.0 + 12.0;
+                    let height = 14.0;
+                    let rect = Path::rounded_rectangle(
+                        Point::new(x, point.y - height / 2.0),
+                        iced::Size::new(width, height),
+                        4.0.into(),
+                    );
+                    frame.fill(&rect, fill_color);
+
+                    frame.fill_text(Text {
+                        content: label,
+                        position: Point::new(x + 6.0, point.y),
+                        color: text_color,
+                        size: 11.0.into(),
+                        vertical_alignment: iced::alignment::Vertical::Center,
+                        ..Text::default()
+                    });
+
+                    x += width + 4.0;
+                }
+            }
         }
 
         vec![frame.into_geometry()]
