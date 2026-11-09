@@ -1,4 +1,4 @@
-use crate::graph::CommitNode;
+use crate::graph::{CommitNode, GitRef};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -10,7 +10,7 @@ pub enum Message {
     Connect,
     FetchStarted,
     FetchProgress(usize),
-    FetchCompleted(Vec<CommitNode>),
+    FetchCompleted(Vec<CommitNode>, Vec<GitRef>),
     FetchFailed(String),
     CanvasEvent(iced::widget::canvas::Event),
     Scrolled(iced::widget::scrollable::RelativeOffset),
