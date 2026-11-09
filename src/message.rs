@@ -1,6 +1,7 @@
 use crate::graph::{CommitNode, GitRef};
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum Message {
     HostChanged(String),
     PortChanged(String),
