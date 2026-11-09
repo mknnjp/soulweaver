@@ -17,6 +17,7 @@ pub struct GitRef {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct CommitNode {
     pub hash: String,
     pub parents: Vec<String>,
@@ -28,6 +29,7 @@ pub struct CommitNode {
     pub y: f32,
 }
 
+#[allow(dead_code)]
 pub struct GraphLayout {
     commits: Vec<CommitNode>,
     index_map: HashMap<String, usize>,

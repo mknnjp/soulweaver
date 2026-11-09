@@ -94,7 +94,7 @@ fn update(state: &mut AppState, message: Message) -> Task<Message> {
     }
 }
 
-fn view(state: &AppState) -> Element<Message> {
+fn view(state: &AppState) -> Element<'_, Message> {
     let connection_form = column![
         text("Remote Git Graph Viewer").size(20),
         row![

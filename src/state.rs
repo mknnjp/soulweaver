@@ -1,6 +1,7 @@
 use crate::graph::{CommitNode, GitRef};
 
 #[derive(Debug, Clone, PartialEq, Default)]
+#[allow(dead_code)]
 pub enum ConnectionState {
     #[default]
     Disconnected,
@@ -11,6 +12,7 @@ pub enum ConnectionState {
 }
 
 #[derive(Default)]
+#[allow(dead_code)]
 pub struct AppState {
     pub host_input: String,
     pub port_input: String,
