@@ -1,6 +1,7 @@
-use crate::graph::CommitNode;
+use crate::graph::{CommitNode, GitRef};
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum Message {
     HostChanged(String),
     PortChanged(String),
@@ -10,7 +11,7 @@ pub enum Message {
     Connect,
     FetchStarted,
     FetchProgress(usize),
-    FetchCompleted(Vec<CommitNode>),
+    FetchCompleted(Vec<CommitNode>, Vec<GitRef>),
     FetchFailed(String),
     CanvasEvent(iced::widget::canvas::Event),
     Scrolled(iced::widget::scrollable::RelativeOffset),

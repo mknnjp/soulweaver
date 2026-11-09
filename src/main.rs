@@ -53,15 +53,16 @@ fn update(state: &mut AppState, message: Message) -> Task<Message> {
                     ssh::fetch_git_graph(&host, &port, &user, &key_path, &repo_path).await
                 },
                 |result| match result {
-                    Ok(commits) => Message::FetchCompleted(commits),
+                    Ok((commits, refs)) => Message::FetchCompleted(commits, refs),
                     Err(e) => Message::FetchFailed(e.to_string()),
                 },
             )
         }
-        Message::FetchCompleted(commits) => {
+        Message::FetchCompleted(commits, refs) => {
             let mut layout = graph::GraphLayout::new(&commits);
             layout.assign_lanes();
             state.commits = layout.into_nodes();
+            state.refs = refs;
             state.connection = state::ConnectionState::Connected {
                 host: state.host_input.clone(),
                 repo_path: state.repo_path_input.clone(),
@@ -93,7 +94,7 @@ fn update(state: &mut AppState, message: Message) -> Task<Message> {
     }
 }
 
-fn view(state: &AppState) -> Element<Message> {
+fn view(state: &AppState) -> Element<'_, Message> {
     let connection_form = column![
         text("Remote Git Graph Viewer").size(20),
         row![
@@ -143,6 +144,7 @@ fn view(state: &AppState) -> Element<Message> {
 
     let graph_canvas = iced::widget::canvas(canvas::GitGraphCanvas::new(
         &state.commits,
+        &state.refs,
     ))
     .width(Length::Fill)
     .height(Length::Fill);
